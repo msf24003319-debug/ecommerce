@@ -1,43 +1,63 @@
-# Vercel deployment configuration (pending confirmation)
+# Vercel deployment
 
-The current workspace contains one deployable Next.js application. `vercel.json`
-uses services mode with a service named `commerce`, rooted at the directory
-containing that configuration. All public paths route to this service, including
-the storefront, `/admin`, `/api/*`, and `/auth/callback`. Existing authentication
-and authorization still apply to these routes.
+This checkout is the standalone ecommerce Git repository and contains one Next.js
+application at its root. No internal service bindings or other applications are
+declared. The portfolio in the parent directory is outside this deployment.
 
-No internal service bindings are declared: the application's API handlers and
-server actions belong to this same Next.js application. Its Supabase SDK calls
-target an externally hosted Supabase project, not another Vercel service. The
-relative browser calls to `/api/catalog` and `/api/variants` already agree with
-the catch-all route. No application URL changes are required for this layout.
+vercel.json selects the Next.js framework and npm run build. It has no Services
+wrapper or catch-all rewrite: the standard Vercel Next.js integration owns page,
+API, static asset, and image-optimizer routing. Public application paths remain
+the same.
 
-The Git root on this machine is the parent `Menu` directory, while this app and
-configuration are in `Menu/commerce`. When importing that Git repository, select
-`commerce` as the Vercel project Root Directory. Do not add a second service with
-root `commerce` inside this configuration: that would resolve to the nonexistent
-`Menu/commerce/commerce`. The sibling `commerce - Copy` is not configured as a
-separate production service. A repository-root multi-service deployment requires
-identifying the other actual application directories first.
+## Project settings
 
-Configure the existing application variables in Vercel for the intended
-environments:
+For github.com/msf24003319-debug/ecommerce, select Root Directory **.** (repository
+root), Framework Preset **Next.js**, install command **npm ci**, and build command
+**npm run build**. Leave Output Directory at the framework default. Do not select
+Services or configure a static export directory.
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (a public publishable/anon key)
-- `NEXT_PUBLIC_SITE_URL` (the public HTTPS storefront origin, used for metadata,
-  sitemap URLs, and authentication redirects)
+If importing a different parent Git repository containing this app in commerce/,
+select that subdirectory instead. Root Directory is relative to the imported Git
+repository, not the local Desktop directory.
 
-Configure corresponding redirect URLs in Supabase authentication settings. Do
-not commit `.env.local` or set hypothetical binding variables manually.
+Set these variables for the intended Production/Preview environment:
 
-Run `vercel dev` from this app directory to verify services locally; Vercel also
-documents `vercel dev -L` for local operation without cloud authentication. The
-Vercel CLI is not installed in the current workspace, so this check has not been
-run. Configuration review does not constitute a hosted deployment test.
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (public publishable/anon key)
+- NEXT_PUBLIC_SITE_URL (the public HTTPS storefront origin)
 
-Before deployment, confirm the `commerce` name, the public catch-all path, the
-absence of internal services/bindings, and the intended location of any additional
-services. No deployment has been performed.
+Configure corresponding redirect URLs in Supabase Auth. Do not commit .env.local
+or put secret/service-role keys in public environment variables.
 
-Reference: https://vercel.com/docs/services
+## Image routing investigation
+
+On October 15, 2026, https://commerce-two-sand-50.vercel.app/ returned 200, but
+/_next/image requests for Supabase and Unsplash returned 404 HTML with
+x-matched-path: /_not-found. Even /_next/image without query parameters reached
+the page fallback. Both original source images returned 200 JPEGs. Local
+next start had previously returned optimized images with 200. This establishes a
+deployed optimizer-routing failure, separate from source-image access and the
+earlier malformed Supabase URL problem.
+
+The previous configuration wrapped this single app in Services mode and routed
+every path into that service. The replacement uses the standard Next.js
+integration to restore framework-owned optimizer routing. A new hosted deployment
+is required to validate this correction; a local build cannot prove the hosted
+route has been restored.
+
+After deploying:
+
+1. Confirm the Vercel project uses Next.js rather than Services.
+2. Open the storefront, collection filters, product details, and cart.
+3. Disable cache in DevTools Network and reload. Requests to /_next/image should
+   return 200 with an image content type, rather than HTML.
+4. Check a Supabase product photo and an Unsplash category photo. If either fails,
+   open its original source URL separately and inspect the optimizer response.
+5. Verify authentication, admin access, and checkout using a test account.
+
+Image optimization remains enabled. No database updates or image URL edits are
+required for this deployment configuration change.
+
+References:
+- https://vercel.com/docs/services/routing
+- https://vercel.com/docs/frameworks/full-stack/nextjs

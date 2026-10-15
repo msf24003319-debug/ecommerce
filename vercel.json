@@ -1,18 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "services": {
-    "commerce": {
-      "root": ".",
-      "framework": "nextjs",
-      "buildCommand": "npm run build"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": {
-        "service": "commerce"
-      }
-    }
-  ]
+  "framework": "nextjs",
+  "buildCommand": "npm run build"
 }
