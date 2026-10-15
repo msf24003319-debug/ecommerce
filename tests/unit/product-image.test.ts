@@ -33,3 +33,16 @@ it("normalizes local image paths before generating optimizer URLs", () => {
   expect(html).toContain("url=%2Fproducts%2Fdress.jpg");
   expect(html).not.toContain("%2Fpublic%2F");
 });
+
+it("uses the allowed public endpoint for malformed Supabase product URLs", () => {
+  const html = renderToStaticMarkup(
+    createElement(ProductImage, {
+      src: "https://store.supabase.co/storage/v1/object/product-images/photo.jpg",
+      alt: "Dress",
+      width: 80,
+      height: 100,
+    }),
+  );
+  expect(html).toContain("<img");
+  expect(html).toContain("%2Fobject%2Fpublic%2Fproduct-images%2Fphoto.jpg");
+});
