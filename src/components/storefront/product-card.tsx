@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/images";
 import { Heart, ArrowUpRight } from "lucide-react";
 import type { Product } from "@/types";
 import { money } from "@/lib/utils";
@@ -24,7 +25,7 @@ export function ProductCard({ product }: { product: Product }) {
         >
           {image ? (
             <Image
-              src={image.url}
+              src={getImageUrl(image.url)}
               alt={image.alt}
               fill
               className="card-primary-image"
@@ -38,7 +39,7 @@ export function ProductCard({ product }: { product: Product }) {
           )}
           {alternate && (
             <Image
-              src={alternate.url}
+              src={getImageUrl(alternate.url)}
               alt={alternate.alt}
               fill
               className="card-alternate-image"

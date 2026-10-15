@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/images";
 import { uploadContentImage } from "@/actions/commerce";
 import { actionRequest } from "@/lib/action-request";
 
@@ -62,7 +63,7 @@ export function ImageField({
         <div>
           {preview && (
             <Image
-              src={preview}
+              src={getImageUrl(preview)}
               alt={label}
               width={180}
               height={120}

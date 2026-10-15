@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/images";
 import { ImageFields } from "./bulk-status";
 import {
   saveProduct,
@@ -275,7 +276,12 @@ export function ProductEditor({
               .sort((a, b) => a.position - b.position)
               .map((im) => (
                 <div key={im.id}>
-                  <Image src={im.url} alt={im.alt} width={100} height={130} />
+                  <Image
+                    src={getImageUrl(im.url)}
+                    alt={im.alt}
+                    width={100}
+                    height={130}
+                  />
                   <p>
                     {im.view ?? "Additional image"}
                     {im.color ? ` / ${im.color}` : " / All colors"}

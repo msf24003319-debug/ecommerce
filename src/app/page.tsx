@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/images";
 import {
   ArrowUpRight,
   Truck,
@@ -57,7 +58,7 @@ export default async function Home() {
         <div className="hero-art">
           {hero?.image_url ? (
             <Image
-              src={hero.image_url}
+              src={getImageUrl(hero.image_url)}
               alt={hero.title}
               fill
               sizes="(max-width: 700px) 100vw, 50vw"
@@ -161,7 +162,7 @@ export default async function Home() {
                     <div className="category-art" />
                     {c.image_url && (
                       <Image
-                        src={c.image_url}
+                        src={getImageUrl(c.image_url)}
                         alt={c.name}
                         fill
                         sizes="(max-width:760px) 100vw, 33vw"
@@ -217,7 +218,7 @@ export default async function Home() {
               <Link className="promotion-tile" key={promo.id} href={promo.link}>
                 {promo.image_url && (
                   <Image
-                    src={promo.image_url}
+                    src={getImageUrl(promo.image_url)}
                     alt={promo.title}
                     fill
                     sizes="(max-width:760px) 100vw, 50vw"

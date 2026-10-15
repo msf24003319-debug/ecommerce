@@ -20,3 +20,16 @@ it("renders a fallback rather than throwing for unconfigured or unsafe image hos
     expect(html).not.toContain("<img");
   }
 });
+
+it("normalizes local image paths before generating optimizer URLs", () => {
+  const html = renderToStaticMarkup(
+    createElement(ProductImage, {
+      src: "/public/products/dress.jpg",
+      alt: "Dress",
+      width: 80,
+      height: 100,
+    }),
+  );
+  expect(html).toContain("url=%2Fproducts%2Fdress.jpg");
+  expect(html).not.toContain("%2Fpublic%2F");
+});

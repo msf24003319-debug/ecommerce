@@ -1,6 +1,7 @@
 ﻿"use client";
 import Link from "next/link";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/images";
 import { useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
@@ -68,7 +69,7 @@ export function Header({
         <Link href="/" className="wordmark">
           {settings.logo_url ? (
             <Image
-              src={settings.logo_url}
+              src={getImageUrl(settings.logo_url)}
               alt={settings.name}
               width={150}
               height={45}

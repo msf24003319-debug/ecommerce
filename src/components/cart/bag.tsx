@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/images";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useShopping } from "@/components/storefront/shopping-provider";
 import { money } from "@/lib/utils";
@@ -97,7 +98,7 @@ export function Bag() {
             <div className="bag-line" key={line.variant_id}>
               {image ? (
                 <Image
-                  src={image.url}
+                  src={getImageUrl(image.url)}
                   alt={image.alt}
                   width={90}
                   height={120}

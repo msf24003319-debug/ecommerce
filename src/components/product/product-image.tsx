@@ -1,22 +1,26 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import { getImageUrl } from "@/lib/images";
 import type { ComponentProps } from "react";
 export function ProductImage(props: ComponentProps<typeof Image>) {
   return <LoadedImage key={String(props.src)} {...props} />;
 }
 function LoadedImage(props: ComponentProps<typeof Image>) {
   const [failed, setFailed] = useState(false);
-  let allowed = typeof props.src !== "string";
-  if (typeof props.src === "string") {
-    allowed = props.src.startsWith("/") && !props.src.startsWith("//");
+  const src =
+    typeof props.src === "string" ? getImageUrl(props.src) : props.src;
+  let allowed = typeof src !== "string";
+  if (typeof src === "string") {
+    allowed = src.startsWith("/") && !src.startsWith("//");
     try {
-      const url = new URL(props.src);
+      const url = new URL(src);
       allowed =
         url.protocol === "https:" &&
         !url.port &&
-        ((url.hostname === "images.unsplash.com" &&
-          url.pathname.startsWith("/photo-")) ||
+        (url.hostname === "res.cloudinary.com" ||
+          (url.hostname === "images.unsplash.com" &&
+            url.pathname.startsWith("/photo-")) ||
           (url.hostname.endsWith(".supabase.co") &&
             url.pathname.startsWith(
               "/storage/v1/object/public/product-images/",
@@ -30,6 +34,11 @@ function LoadedImage(props: ComponentProps<typeof Image>) {
       Image unavailable
     </span>
   ) : (
-    <Image {...props} alt={props.alt} onError={() => setFailed(true)} />
+    <Image
+      {...props}
+      src={src}
+      alt={props.alt}
+      onError={() => setFailed(true)}
+    />
   );
 }
