@@ -1,0 +1,97 @@
+import type { Metadata } from "next";
+import "./globals.css";
+import "./storefront.css";
+import { settings, categories } from "@/repositories/catalog";
+import { currentUser } from "@/lib/auth";
+import { ShoppingProvider } from "@/components/storefront/shopping-provider";
+import { Header } from "@/components/storefront/header";
+import Link from "next/link";
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  ),
+  title: {
+    default: "Maison Mira — The everyday, elevated",
+    template: "%s | Maison Mira",
+  },
+  description:
+    "Thoughtful essentials, effortless silhouettes, and little luxuries. Discover Maison Mira.",
+  openGraph: {
+    title: "Maison Mira",
+    description: "The everyday, elevated",
+    type: "website",
+  },
+};
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [s, c, user] = await Promise.all([
+    settings(),
+    categories(),
+    currentUser(),
+  ]);
+  return (
+    <html lang="en">
+      <body>
+        <ShoppingProvider key={user?.id ?? "guest"} userId={user?.id ?? null}>
+          <a className="skip-link" href="#main">
+            Skip to content
+          </a>
+          <Header settings={s} categories={c} />
+          <main id="main">{children}</main>
+          <footer>
+            <div className="footer-top">
+              <div>
+                <Link className="wordmark" href="/">
+                  {s.name}
+                </Link>
+                <p>
+                  Small moments. Beautiful things.
+                  <br />A wardrobe that feels like you.
+                </p>
+              </div>
+              <div>
+                <h3>Discover</h3>
+                <Link href="/collections/all">The collection</Link>
+                <Link href="/wishlist">Your wishlist</Link>
+                <Link href="/pages/about-us">Our story</Link>
+              </div>
+              <div>
+                <h3>Here to help</h3>
+                <Link href="/pages/contact">Contact us</Link>
+                <Link href="/track-order">Track your order</Link>
+                <Link href="/pages/faq">Frequently asked questions</Link>
+              </div>
+              <div>
+                <h3>The details</h3>
+                <Link href="/policies/shipping">Delivery</Link>
+                <Link href="/policies/returns">Returns & exchanges</Link>
+                <Link href="/policies/privacy">Privacy</Link>
+                <Link href="/policies/terms">Terms of service</Link>
+                {s.footer_links.map((link) => (
+                  <Link key={link.href} href={link.href}>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <div className="footer-bottom">
+              <span>
+                © {new Date().getFullYear()} {s.name}
+              </span>
+              <span>Designed with intention · Pakistan</span>
+              <span>
+                {s.cod_enabled
+                  ? "Cash on delivery"
+                  : "Checkout temporarily paused"}
+              </span>
+            </div>
+          </footer>
+        </ShoppingProvider>
+      </body>
+    </html>
+  );
+}
