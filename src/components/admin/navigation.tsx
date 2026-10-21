@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -67,10 +68,7 @@ export function AdminNavigation({
   const navigation = (
     <>
       <Link className="admin-brand" href="/admin" onClick={close}>
-        <span className="admin-monogram">M</span>
-        <span>
-          MAISON MIRA<small>Commerce workspace</small>
-        </span>
+        <Image src="/logo.png" alt="Narmelle" width={150} height={99} priority />
       </Link>
       <nav aria-label="Staff navigation">
         {[

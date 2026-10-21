@@ -29,7 +29,13 @@ export function ProductDetail({
   const variants = product.product_variants.filter((v) => v.active);
   const sizing = hasSizes(product);
   const colors = [...new Set(variants.map((v) => v.color))];
-  const sizes = [...new Set(variants.map((v) => v.size))];
+  const sizes = [...new Set(variants.map((v) => v.size))].sort((a, b) => {
+    const order = ["XS", "S", "M", "L", "XL", "XXL"];
+    return (
+      (order.includes(a) ? order.indexOf(a) : 99) -
+      (order.includes(b) ? order.indexOf(b) : 99)
+    );
+  });
   const [color, setColor] = useState(
       variants.find(
         (v) => (v.inventory?.on_hand ?? 0) - (v.inventory?.reserved ?? 0) > 0,
@@ -155,6 +161,7 @@ export function ProductDetail({
                   }
                   onClick={() => {
                     setColor(value);
+                    setSize("");
                     setQty(1);
                     setIndex(0);
                     setAdded(false);
@@ -168,37 +175,54 @@ export function ProductDetail({
         )}
         {sizing && (
           <fieldset className="variant-options">
-            <legend>Size</legend>
-            <div className="button-row">
-              {sizes.map((value) => (
-                <button
-                  type="button"
-                  key={value}
-                  className={
-                    size === value
-                      ? "btn btn-primary btn-sm"
-                      : "btn btn-outline btn-sm"
-                  }
-                  aria-pressed={size === value}
-                  disabled={
-                    !variants.some(
-                      (v) =>
-                        v.color === color &&
-                        v.size === value &&
+            <legend>Size{size ? `: ${size}` : " — choose your fit"}</legend>
+            <div className="size-options">
+              {sizes.map((value) => {
+                const available = variants
+                  .filter((v) => v.color === color && v.size === value)
+                  .reduce(
+                    (total, v) =>
+                      total +
+                      Math.max(
+                        0,
                         (v.inventory?.on_hand ?? 0) -
-                          (v.inventory?.reserved ?? 0) >
-                          0,
-                    )
-                  }
-                  onClick={() => {
-                    setSize(value);
-                    setQty(1);
-                    setAdded(false);
-                  }}
-                >
-                  {value}
-                </button>
-              ))}
+                          (v.inventory?.reserved ?? 0),
+                      ),
+                    0,
+                  );
+                return (
+                  <button
+                    type="button"
+                    key={value}
+                    className={
+                      size === value
+                        ? "btn btn-primary size-option"
+                        : "btn btn-outline size-option"
+                    }
+                    aria-pressed={size === value}
+                    disabled={
+                      !variants.some(
+                        (v) =>
+                          v.color === color &&
+                          v.size === value &&
+                          (v.inventory?.on_hand ?? 0) -
+                            (v.inventory?.reserved ?? 0) >
+                            0,
+                      )
+                    }
+                    onClick={() => {
+                      setSize(value);
+                      setQty(1);
+                      setAdded(false);
+                    }}
+                  >
+                    <strong>{value}</strong>
+                    <small>
+                      {available > 0 ? `${available} available` : "Sold out"}
+                    </small>
+                  </button>
+                );
+              })}
             </div>
             {!size && <p className="muted">Choose a size to continue.</p>}
           </fieldset>

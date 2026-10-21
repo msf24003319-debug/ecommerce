@@ -6,6 +6,7 @@ import { currentUser } from "@/lib/auth";
 import { ShoppingProvider } from "@/components/storefront/shopping-provider";
 import { Header } from "@/components/storefront/header";
 import Link from "next/link";
+import Image from "next/image";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -46,7 +47,7 @@ export default async function RootLayout({
             <div className="footer-top">
               <div>
                 <Link className="wordmark" href="/">
-                  {s.name}
+                  <Image src="/logo.png" alt="Narmelle" width={150} height={99} />
                 </Link>
                 <p>
                   Small moments. Beautiful things.

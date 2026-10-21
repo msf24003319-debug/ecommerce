@@ -1038,3 +1038,26 @@
     white-space: normal;
   }
 }
+.size-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.size-option {
+  display: grid;
+  gap: 6px;
+  min-width: 90px;
+  min-height: 70px;
+  text-align: center;
+}
+.size-option strong {
+  font-size: 17px;
+}
+.size-option small {
+  font-size: 11px;
+  letter-spacing: 0;
+}
+.size-option:disabled {
+  border-style: dashed;
+  opacity: 0.55;
+}

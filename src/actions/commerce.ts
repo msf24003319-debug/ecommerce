@@ -5,7 +5,7 @@ import {
   rpcPayload,
 } from "@/lib/security/errors";
 import { revalidatePath } from "next/cache";
-import { transitions, orderStatusLabel } from "@/lib/utils";
+import { transitions, directOrderTargets, orderStatusLabel } from "@/lib/utils";
 import { validateCouponTargets } from "@/repositories/coupon-options";
 import { z } from "zod";
 import { db } from "@/lib/supabase/server";
@@ -334,24 +334,28 @@ export async function updateOrder(input: unknown) {
       throw new PublicError(
         "Order not found or no longer accessible. Reload the order.",
       );
-    if (!transitions[before.data.status]?.includes(p.status))
+    if (!directOrderTargets(before.data.status).includes(p.status))
       throw new PublicError(
         `Cannot change ${orderStatusLabel(before.data.status)} to ${orderStatusLabel(p.status)}. Reload to review the permitted next actions.`,
       );
-    const { data, error } = await client.rpc("transition_order", {
-      p_order: p.id,
-      p_status: p.status,
-      p_tracking: p.tracking,
-      p_courier: p.courier,
-      p_reason: p.reason,
-    });
+    const direct = !transitions[before.data.status]?.includes(p.status);
+    const { data, error } = await client.rpc(
+      direct ? "advance_order" : "transition_order",
+      {
+        p_order: p.id,
+        p_status: p.status,
+        p_tracking: p.tracking,
+        p_courier: p.courier,
+        p_reason: p.reason,
+      },
+    );
     if (
       error?.code === "PGRST202" ||
       error?.code === "42883" ||
       (error?.code === "23514" && error.message.includes("orders_status_check"))
     )
       throw new PublicError(
-        "The database order workflow is out of date. Verify that migration 202610140014_order_progress_feedback.sql has been applied through your normal deployment process, then reload this order.",
+        "The database order workflow is out of date. Apply migrations 202610140014_order_progress_feedback.sql and 202610210015_direct_order_status.sql, then reload this order.",
       );
     if (
       error?.code === "P0001" &&

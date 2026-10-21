@@ -246,6 +246,38 @@ export function ProductEditor({
           </div>
           <ProductLifecycle id={product.id} name={product.name} />
           <h2 id="product-variants">Variants & inventory</h2>
+          <div className="size-inventory-summary">
+            {(product.has_sizes ? ["S", "M", "L"] : ["One size"]).map(
+              (size) => {
+                const matching = product.product_variants.filter(
+                  (v) => v.size === size && v.active,
+                );
+                const available = matching.reduce(
+                  (total, v) =>
+                    total +
+                    Math.max(
+                      0,
+                      (v.inventory?.on_hand ?? 0) -
+                        (v.inventory?.reserved ?? 0),
+                    ),
+                  0,
+                );
+                const reserved = matching.reduce(
+                  (total, v) => total + (v.inventory?.reserved ?? 0),
+                  0,
+                );
+                return (
+                  <div key={size}>
+                    <strong>{size}</strong>
+                    <span>{available} available</span>
+                    <small>
+                      {reserved} reserved · {matching.length} active variants
+                    </small>
+                  </div>
+                );
+              },
+            )}
+          </div>
           <p className="muted">
             Each size and color has its own SKU, availability, and stock. Expand
             a variant to edit it or adjust inventory.
@@ -426,22 +458,30 @@ export function VariantEditor({
             SKU
             <input name="sku" required defaultValue={variant?.sku} />
           </label>
-          <label>
-            Size
-            <select
-              name="size"
-              defaultValue={variant?.size ?? (hasSizes ? "S" : "One size")}
-            >
+          <fieldset className="variant-size-picker" disabled={busy}>
+            <legend>Size</legend>
+            <div>
               {[
                 ...new Set([
                   ...(hasSizes ? ["S", "M", "L"] : ["One size"]),
                   ...(variant ? [variant.size] : []),
                 ]),
               ].map((size) => (
-                <option key={size}>{size}</option>
+                <label key={size}>
+                  <input
+                    type="radio"
+                    name="size"
+                    value={size}
+                    defaultChecked={
+                      size === (variant?.size ?? (hasSizes ? "S" : "One size"))
+                    }
+                    required
+                  />
+                  <span>{size}</span>
+                </label>
               ))}
-            </select>
-          </label>
+            </div>
+          </fieldset>
           <label>
             Colour
             <input

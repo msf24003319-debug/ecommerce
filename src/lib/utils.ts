@@ -61,6 +61,16 @@ export const orderStages = [
   "out_for_delivery",
   "delivered",
 ] as const;
+export const allOrderStatuses = [...orderStages, "cancelled", "returned"];
+export function directOrderTargets(status: string): string[] {
+  const index = orderStages.indexOf(status as (typeof orderStages)[number]);
+  if (index < 0) return [];
+  return [
+    ...orderStages.slice(index + 1),
+    ...(index < orderStages.indexOf("shipped") ? ["cancelled"] : []),
+    ...(status === "delivered" ? ["returned"] : []),
+  ];
+}
 export function orderStatusLabel(status: string) {
   return (
     (

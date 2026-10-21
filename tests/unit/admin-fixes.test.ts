@@ -112,8 +112,8 @@ describe("Verified fulfillment updates", () => {
     expect(result.message).toContain("could not be verified");
     expect(result.message).not.toContain("PRIVATE");
   });
-  it.each(["confirmed", "pending", "delivered"])(
-    "rejects repeated/backward/skipped %s actions before mutation",
+  it.each(["confirmed", "pending"])(
+    "rejects repeated/backward %s actions before mutation",
     async (status) => {
       const c = client();
       expect((await updateOrder({ ...transition, status })).ok).toBe(false);
@@ -173,9 +173,29 @@ describe("Verified fulfillment updates", () => {
         } as Order,
       }),
     );
-    expect(html).toContain('value="processing" selected');
-    expect(html).toContain("Current fulfillment status:");
-    expect(html).toContain('value="cancelled"');
+    expect(html).toContain('name="status" value="processing"');
+    expect(html).toContain("Fulfillment");
+    expect(html).toContain('role="combobox"');
+  });
+  it("routes a direct jump through the atomic advancement RPC", async () => {
+    const c = client();
+    c.chain.single
+      .mockResolvedValueOnce({ data: { id, status: "pending" }, error: null })
+      .mockResolvedValueOnce({
+        data: { id, status: "delivered" },
+        error: null,
+      });
+    const result = await updateOrder({
+      ...transition,
+      status: "delivered",
+      tracking: "TRACK",
+      courier: "Courier",
+    });
+    expect(result.ok).toBe(true);
+    expect(c.rpc).toHaveBeenCalledWith(
+      "advance_order",
+      expect.objectContaining({ p_status: "delivered" }),
+    );
   });
 });
 describe("Coupon eligibility safety", () => {

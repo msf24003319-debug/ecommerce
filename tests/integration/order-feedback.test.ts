@@ -115,6 +115,39 @@ beforeAll(async () => {
 afterAll(async () => {
   await db?.close();
 });
+it("advances directly with audit history and rolls back an incomplete shipping jump", async () => {
+  const o = await place(0);
+  await expect(
+    db.query(
+      "select advance_order($1,'delivered','TRACK','Courier','Direct update')",
+      [o.id],
+    ),
+  ).rejects.toThrow("Forbidden");
+  await actor(orders);
+  await expect(
+    db.query("select advance_order($1,'delivered','','','Direct update')", [
+      o.id,
+    ]),
+  ).rejects.toThrow("Courier and tracking required");
+  expect((await progress(o.id))?.status).toBe("pending");
+  expect((await progress(o.id))?.history).toEqual([]);
+  await db.query(
+    "select advance_order($1,'delivered','TRACK','Courier','Direct update')",
+    [o.id],
+  );
+  const saved = await progress(o.id);
+  expect(saved?.status).toBe("delivered");
+  expect(
+    (saved?.history as { status: string }[]).map((event) => event.status),
+  ).toEqual(stages);
+  await expect(
+    db.query(
+      "select advance_order($1,'confirmed','TRACK','Courier','Backward update')",
+      [o.id],
+    ),
+  ).rejects.toThrow("Invalid order transition");
+  await advance(o.id, "returned");
+});
 it("preserves S/M/L identity and deducts independent size stock for guest and registered orders", async () => {
   const guest = await place(0, true),
     member = await place(1);

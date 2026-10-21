@@ -1,32 +1,51 @@
 "use client";
 import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { transitions, orderStatusLabel } from "@/lib/utils";
+import {
+  allOrderStatuses,
+  directOrderTargets,
+  orderStatusLabel,
+} from "@/lib/utils";
 import { codReconciliation } from "@/lib/admin-input";
 import { actionRequest } from "@/lib/action-request";
 import { updateOrder, recordPayment } from "@/actions/commerce";
 import type { Order } from "@/types";
+import { OrderStatusSelect } from "./order-status-select";
 export function OrderActions({ order }: { order: Order }) {
   const [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false);
   const router = useRouter();
   const [refreshing, startRefresh] = useTransition();
   const disabled = busy || refreshing;
-  const next = transitions[order.status] ?? [];
+  const next = directOrderTargets(order.status);
+  const [selectedStatus, setSelectedStatus] = useState(next[0] ?? "");
+  const targetStatus = next.includes(selectedStatus) ? selectedStatus : next[0];
   const pending = useRef(false);
   const reconciliation = codReconciliation(order.status, order.payment_status);
   return (
-    <div className="panel">
+    <div className="panel order-management">
       <h2>Order management</h2>
-      <p>
-        Current fulfillment status:{" "}
-        <strong>{orderStatusLabel(order.status)}</strong>
-      </p>
+      <div className="order-status-cards">
+        <div>
+          <span>Fulfillment</span>
+          <strong>{orderStatusLabel(order.status)}</strong>
+        </div>
+        <div>
+          <span>Payment</span>
+          <strong>{order.payment_status.replaceAll("_", " ")}</strong>
+        </div>
+        <div>
+          <span>Delivery</span>
+          <strong>{order.courier || "Courier not assigned"}</strong>
+          <small>{order.tracking_number || "No tracking number yet"}</small>
+        </div>
+      </div>
       <p className="muted">
-        Only permitted next statuses appear below. Record a reason for each
-        change. Fulfillment updates do not collect COD payments.
+        Choose a fulfillment stage directly and record a reason. Earlier stages
+        are unavailable. Shipping and later stages require courier and tracking
+        details. COD payments are recorded separately.
       </p>
-      {transitions[order.status]?.length > 0 && (
+      {next.length > 0 && (
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -63,21 +82,14 @@ export function OrderActions({ order }: { order: Order }) {
             className="form-grid order-action-fields"
             disabled={disabled}
           >
-            <label>
-              New status
-              <select
-                key={order.id + ":" + order.status}
-                name="status"
-                defaultValue={next[0]}
-                required
-              >
-                {next.map((s) => (
-                  <option key={s} value={s}>
-                    {orderStatusLabel(s)}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <OrderStatusSelect
+              key={order.id + ":" + order.status}
+              value={targetStatus}
+              options={allOrderStatuses}
+              allowedOptions={next}
+              disabled={disabled}
+              onChange={setSelectedStatus}
+            />
             <label>
               Courier
               <input
@@ -99,10 +111,21 @@ export function OrderActions({ order }: { order: Order }) {
               <input name="reason" minLength={3} maxLength={500} required />
             </label>
           </fieldset>
+          <p className="order-change-preview" aria-live="polite">
+            {orderStatusLabel(order.status)} → {orderStatusLabel(targetStatus)}
+          </p>
           <button className="btn btn-primary" disabled={disabled}>
-            {disabled ? "Saving order..." : "Update order"}
+            {disabled
+              ? "Saving order..."
+              : `Mark as ${orderStatusLabel(targetStatus)}`}
           </button>
         </form>
+      )}
+      {!next.length && (
+        <p className="muted">
+          This order is {orderStatusLabel(order.status).toLowerCase()}. No
+          further fulfillment updates are available.
+        </p>
       )}
       {reconciliation && (
         <form

@@ -1,7 +1,7 @@
 ﻿"use client";
 import Link from "next/link";
 import Image from "next/image";
-import { getImageUrl } from "@/lib/images";
+import logo from "../../../public/logo.png";
 import { useState, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
@@ -67,16 +67,14 @@ export function Header({
           {open ? <X /> : <Menu />}
         </button>
         <Link href="/" className="wordmark">
-          {settings.logo_url ? (
-            <Image
-              src={getImageUrl(settings.logo_url)}
-              alt={settings.name}
-              width={150}
-              height={45}
-            />
-          ) : (
-            settings.name
-          )}
+          <Image
+            src={logo}
+            alt="Narmelle"
+            width={96}
+            height={64}
+            priority
+            unoptimized
+          />
           <span>THE EVERYDAY, ELEVATED</span>
         </Link>
         <nav

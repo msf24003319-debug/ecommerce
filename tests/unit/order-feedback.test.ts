@@ -11,7 +11,34 @@ import {
   FeedbackForm,
   FeedbackModeration,
 } from "@/components/account/feedback";
-import { transitions, orderStages, orderStatusLabel } from "@/lib/utils";
+import {
+  transitions,
+  orderStages,
+  orderStatusLabel,
+  allOrderStatuses,
+  directOrderTargets,
+} from "@/lib/utils";
+
+it("lists every status and permits forward jumps without reopening terminal orders", () => {
+  expect(allOrderStatuses).toEqual([
+    "pending",
+    "confirmed",
+    "processing",
+    "packed",
+    "shipped",
+    "out_for_delivery",
+    "delivered",
+    "cancelled",
+    "returned",
+  ]);
+  expect(directOrderTargets("pending")).toContain("delivered");
+  expect(directOrderTargets("pending")).toContain("cancelled");
+  expect(directOrderTargets("pending")).not.toContain("returned");
+  expect(directOrderTargets("shipped")).not.toContain("cancelled");
+  expect(directOrderTargets("delivered")).toEqual(["returned"]);
+  expect(directOrderTargets("cancelled")).toEqual([]);
+  expect(directOrderTargets("returned")).toEqual([]);
+});
 import type { Order, OrderProgress, Feedback } from "@/types";
 const order = {
   id: "test",
